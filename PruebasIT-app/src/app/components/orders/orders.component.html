@@ -1,0 +1,81 @@
+<div *ngIf="mode === 'list'">
+    <h2>Listado de Órdenes</h2>
+    <table border="1" cellpadding="5">
+        <thead>
+            <tr>
+                <th>Nombre del paciente</th>
+                <th>Fecha de atención</th>
+                <th>Cantidad de exámenes</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let order of orders">
+                <td>{{ order.patientName }}</td>
+                <td>{{ order.attentionDate | date }}</td>
+                <td>{{ order.examsCount}}</td>
+                <td>
+                    <button (click)="showDetail(order.id,order.patientName)">Ver Detalle</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 10px;">
+        <button (click)="prevPage()" [disabled]="currentPage === 1">Anterior</button>
+        <button (click)="nextPage()" [disabled]="currentPage === totalPages">Siguiente</button>
+    </div>
+
+    <div style="margin-top: 10px;">
+        <button (click)="mode='create'">Crear Orden</button>
+    </div>
+</div>
+
+<div *ngIf="mode === 'detail' && selectedOrder">
+    <h2>Detalle de Orden</h2>
+    <p><strong>Paciente:</strong> {{ paciente}}</p>
+    <p><strong>Fecha de atención:</strong> {{ selectedOrder.attentionDate | date }}</p>
+    <p><strong>Exámenes:</strong></p>
+    <ul>
+        <li *ngFor="let exam of selectedOrder.exams">{{ exam.code }} - {{ exam.name }}</li>
+    </ul>
+    <button (click)="backToList()">Volver al Listado</button>
+</div>
+
+<!-- Crear -->
+<div *ngIf="mode === 'create'">
+    <h2>Crear Orden</h2>
+    <form [formGroup]="orderForm" (ngSubmit)="submitOrder()">
+        <div>
+            <label>Nombre del paciente:</label>
+            <input formControlName="patientName">
+            <div *ngIf="orderForm.get('patientName')?.touched && orderForm.get('patientName')?.invalid">
+                Mínimo 3 caracteres
+            </div>
+        </div>
+
+        <div>
+            <label>Fecha de atención:</label>
+            <input type="date" formControlName="date">
+            <div *ngIf="orderForm.get('date')?.errors?.['futureDate']">
+                La fecha no puede ser futura
+            </div>
+        </div>
+
+        <div formArrayName="exams">
+            <label>Exámenes:</label>
+            <button type="button" (click)="addExam()">Agregar examen</button>
+            <div *ngFor="let exam of exams.controls; let i = index" [formGroupName]="i">
+                <input placeholder="Código" formControlName="code">
+                <input placeholder="Nombre" formControlName="name">
+                <button type="button" (click)="removeExam(i)">Eliminar</button>
+            </div>
+            <div *ngIf="exams.invalid && exams.touched">
+                Debe agregar al menos un examen
+            </div>
+        </div>
+
+        <button type="submit">Crear</button>
+        <button type="button" (click)="mode='list'">Cancelar</button>
+    </form>
+</div>
